@@ -9,8 +9,8 @@ DUMMY_STORY_DATA = {
                     "eyes": "green"}],
     "story": {
         "comic title": "John's intergalactic adventures",
-        "story": "pilot john batles fearsome monsters in outer space",
-        "style": "futuristic",
+        "story": "pilot john battles enemies in outer space",
+        "style": "futuristic, digital art",
         "mood": "dark",
         "place": "space"
     }
@@ -31,7 +31,7 @@ class MyServer(BaseHTTPRequestHandler):
         print("HERE")
         #print(self.path.strip("/").split("/")[1])
         res_body = self.handle_request(self.path)
-        self.wfile.write(bytes(json.dumps(res_body, separators=(',', ':')), "utf-8"))
+        self.wfile.write(bytes(res_body, "utf-8"))
         #self.wfile.write(bytes(f'<img src="{res_body}" alt="GENERATED PHOTO" width="1024" height="1024">', "utf-8"))
 
     
@@ -73,15 +73,15 @@ class MyServer(BaseHTTPRequestHandler):
         for key in data["story"]:
             story_string += f'{key} - {data["story"][key]}, '
         
-        prompt_string = f"You will tell this story like a comic book in 8 panels, dont forget to put a persons apearence after every time they are mentioned. take their apearence from this:{character_string} and here is the story: "+story_string
+        prompt_string = f"Summarize every panel of the story, describe every panel without context from the others, describe the characters instead of mentioning their names, describe the characters in each panel. take character apearence from this:{character_string} and here is the story: "+story_string
 
         print(prompt_string)
 
-        return (self.text_prompt(prompt_string))
+        return json.dumps(self.text_prompt(prompt_string), separators=(',', ':'))
 
 
     def image_prompt(self, prompt: str, size: int = 1024) -> str:
-        guides = "image, digital art, clear lines; "
+        guides = "digital art, clear lines, comic book, artwork, HD, color, 4K, warner brothers, DC comics, marvel, "
         response = openai.Image.create(
             prompt=(guides+prompt)[:400],
             n=1,
@@ -90,7 +90,7 @@ class MyServer(BaseHTTPRequestHandler):
 
         image_url = response['data'][0]['url']
 
-        return image_url
+        return f'<img src="{image_url}" alt="GENERATED PHOTO" width="1024" height="1024">'
 
 if __name__ == "__main__":        
     webServer = HTTPServer((hostName, serverPort), MyServer)
