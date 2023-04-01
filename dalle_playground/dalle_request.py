@@ -4,7 +4,7 @@ import sys # to access the system
 import cv2
 
 ###########
-prompt = "Retro-futuristic art style, adventurous mood, dangerous and exciting atmosphere, diverse and visually stunning environment, classic and timeless feel, emphasis on heroism, action, and the triumph of good over evil, image, print, painting, graphic, no text, without text. We see Flash Gordon and his companions, including the brave pilot Dale Arden and the eccentric scientist Dr. Hans Zarkov, flying in a sleek spaceship towards the planet Mongo."
+prompt = input("Prompt: ")
 ###########
 
 openai.api_key_path="../openai_key.txt"
