@@ -7,7 +7,7 @@ import cv2
 prompt = "Retro-futuristic art style, adventurous mood, dangerous and exciting atmosphere, diverse and visually stunning environment, classic and timeless feel, emphasis on heroism, action, and the triumph of good over evil, image, print, painting, graphic, no text, without text. We see Flash Gordon and his companions, including the brave pilot Dale Arden and the eccentric scientist Dr. Hans Zarkov, flying in a sleek spaceship towards the planet Mongo."
 ###########
 
-openai.api_key = "KEY_HERE"
+openai.api_key_path="../openai_key.txt"
 
 def generate_dalle_image(prompt):
     response = openai.Image.create(
