@@ -84,6 +84,22 @@ def story_completion():
 
     return text_prompt(prompt_string)
 
+@app.route('/api/story/generate', methods=['POST']) # mas formular - return vygenerovany story
+def generate_story():
+    data = request.get_json()
+
+@app.route('/api/story/continue', methods=['POST']) # mas story a characterov - return vygenerovany story
+def continue_story():
+    data = request.get_json()
+
+@app.route('/api/panel/descriptions', methods=['POST']) # mas descr + prompt vsetkych 12 (list dictionaries) - return descriptiony
+def generate_panel_descriptions():
+    data = request.get_json()
+
+@app.route('/api/panel/generate', methods=['POST']) # mas descr + prompt - return b64 panel
+def generate_panel():
+    data = request.get_json()
+
 ###################
 def text_prompt(prompt: str) -> str:
     response = openai.Completion.create(
