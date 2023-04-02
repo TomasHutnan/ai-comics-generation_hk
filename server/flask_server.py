@@ -19,7 +19,7 @@ DUMMY_STORY_DATA = {
     }
 }
 
-FONT_FILE = "../Alkatra.ttf"
+FONT_FILE = "../Comic_Book.otf"
 openai.api_key_path="../openai_key.txt"
 
 app = Flask(__name__)
@@ -39,9 +39,9 @@ def get_users():
 
 @app.route('/api/test', methods=['GET'])
 def test_users():
-    data = requests.post('http://localhost:5000/api/users', data=jsonify({"test": "TEST_DATA"}))
+    data = requests.post('http://localhost:5000/api/panel', json={"prompt": "City Street(dark alleyway, street lamps, graffiti on walls), Action(man in a suit walking down the street, looking around suspiciously), Character(man in a suit, black hat, sunglasses, briefcase). ", "caption": "Life was a hard one for many. It was a life of crime, violence, and corruption."})
 
-    return data
+    return get_html_image(data.content)
 
 @app.route('/image', methods=['GET'])
 def image_completion():
@@ -58,7 +58,7 @@ def api_panel():
 
     image_url = image_prompt(data["prompt"])
     b64 = str(base64.b64encode(requests.get(image_url).content), encoding="utf-8")
-    captioned_b64 = draw_caption(b64, data["description"][:200])
+    captioned_b64 = draw_caption(b64, data["caption"][:200])
 
     return captioned_b64
 
@@ -129,7 +129,7 @@ def draw_caption(img="test.png", caption="Flash Gordon and his team of superhuma
     #print(w, h)
     W,H = image.size
     x,y = 0.5*(W-w),0.90*H-h
-    draw.rectangle((x-20, y, 1024-x+20, 1024-50), fill="black")
+    draw.rectangle((x-20, y, 1024-x+20, 1024-75), fill="black")
     draw.text((x, y), caption_new, font=font)
     
     in_mem_file = io.BytesIO()
