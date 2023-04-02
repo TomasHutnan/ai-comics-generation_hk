@@ -297,7 +297,7 @@ def image_prompt(prompt: str, size: int = 1024) -> str:
 ######################
 
 def draw_caption(img="test.png", caption="Flash Gordon and his team of superhumans are travelling through the universe, fighting off hordes of aliens and robots."):
-    wrapper = textwrap.TextWrapper(width=50) 
+    wrapper = textwrap.TextWrapper(width=43, max_lines=5)
     word_list = wrapper.wrap(text=caption) 
     caption_new = ''
     for ii in word_list[:-1]:
