@@ -1,68 +1,55 @@
-from flask import Flask, jsonify, request
-import requests
-import openai
+import base64
+import io
 import json
 import textwrap
+
+import openai
+import requests
+from flask import Flask, jsonify, request
 from PIL import Image, ImageDraw, ImageFont
-import io, base64
 
 FONT_FILE = "../Comic_Book.otf"
 openai.api_key_path="../openai_key.txt"
 
 app = Flask(__name__)
 
-####### TEST
-""" @app.route('/test', methods=['GET'])
-def test_picture():
-    response = requests.post("http://127.0.0.1:5000/api/character/picture", json={"character":{
-        "name": "Tom",
-        "attributes": ["A"],
-        "skin": "A",
-        "hair": ["A"],
-        "physical": ["A"],
-        "clothes": ["A"],
-    }})
 
-    return response.content """
+"""
+API ROUTES
+"""
 
-####### TEST
-
-@app.route('/api/story/generate', methods=['POST']) # mas formular - return vygenerovany story
+@app.route('/api/story/generate', methods=['POST'])
 def generate_story():
     data = request.get_json()
 
     context = ". ".join([data["mood"], data["location"], data["style"]])
     story = story_completion(context, data["name"])
-
     characters = parse_character_form(data["characters"], story)
-
     complete_story = continue_story(story, characters)
 
     return complete_story
 
-@app.route('/api/story/continue', methods=['POST']) # mas story a characterov - return vygenerovany story
+@app.route('/api/story/continue', methods=['POST'])
 def continue_generated_story():
     data = request.get_json()
 
     story = data["story"]
     characters = parse_character_form(data["characters"], story)
-
     story_continuation = continue_story(story, characters)
 
     return story_continuation
 
-@app.route('/api/panel/descriptions', methods=['POST']) # mas story a characterov - return descriptiony
+@app.route('/api/panel/descriptions', methods=['POST'])
 def generate_panel_descriptions():
     data = request.get_json()
 
     story = data["story"]
     characters = parse_character_form(data["characters"], story)
-
     descriptions = get_image_descriptions(story, characters)
 
     return jsonify(descriptions)
 
-@app.route('/api/panel/generate', methods=['POST']) # mas descr + prompt - return b64 panel {"prompt": "","caption": ""}
+@app.route('/api/panel/generate', methods=['POST'])
 def generate_panel():
     data = request.get_json()
 
@@ -72,11 +59,9 @@ def generate_panel():
 
     return str(captioned_b64)
 
-@app.route('/api/character/picture', methods=['POST']) # mas charactera - return b64 picture
+@app.route('/api/character/picture', methods=['POST'])
 def generate_character_picture():
     data = request.get_json()
-    
-    #character = parse_character_form([data["character"]], "")
 
     char_prompt = make_character_image(data["character"])
     image_url = image_prompt(char_prompt, 256)
@@ -85,13 +70,14 @@ def generate_character_picture():
     return b64
 
 
-###################
+"""
+API HELPER FUNCTIONS
+"""
 
 def parse_character_form(form, story):
     characters = {}
     for char in form:
         prompt = ""
-
         if char["attributes"]:
             prompt += "Their attributes are " + ", ".join(char["attributes"]) + ". "
         if char["skin"]:
@@ -104,12 +90,40 @@ def parse_character_form(form, story):
             prompt += "Their clothes are " + ", ".join(char["clothes"]) + ". "
         
         character = character_completion(char["name"], story, prompt)
-
         characters[char["name"]] = character
-    
+
     return characters
 
-###################
+
+def draw_caption(img="test.png", caption="Flash Gordon and his team of superhumans are travelling through the universe, fighting off hordes of aliens and robots."):
+    wrapper = textwrap.TextWrapper(width=43, max_lines=5)
+    word_list = wrapper.wrap(text=caption) 
+    caption_new = ''
+    for ii in word_list[:-1]:
+        caption_new = caption_new + ii + '\n'
+    caption_new += word_list[-1]
+
+    image = Image.open(io.BytesIO(base64.b64decode(img)))
+    draw = ImageDraw.Draw(image)
+
+    font = ImageFont.truetype(FONT_FILE, size=36)
+    w,h = draw.textsize(caption_new, font)
+    W,H = image.size
+    x,y = 0.5*(W-w),0.90*H-h
+    draw.rectangle((x-20, y, 1024-x+20, 1024-75), fill="black")
+    draw.text((x, y), caption_new, font=font)
+    
+    in_mem_file = io.BytesIO()
+    image.save(in_mem_file, format = "PNG")
+    in_mem_file.seek(0)
+    img_bytes = in_mem_file.read()
+
+    base64_encoded_result_bytes = base64.b64encode(img_bytes)
+    return base64_encoded_result_bytes
+
+"""
+TEXT-DAVINCI INTERFACE FUNCTIONS
+"""
 
 def story_completion(context , prompt):
     info = openai.Completion.create(
@@ -119,9 +133,7 @@ def story_completion(context , prompt):
         n=1,
         stop=None,
         temperature=0.5,
-    
     )
-    
 
     message = info.choices[0].text.strip()
     return message
@@ -136,7 +148,6 @@ def character_completion(name,context,prompt):
         n=1,
         stop=None,
         temperature=0.5,
-    
     )
 
     response = openai.Completion.create(
@@ -146,11 +157,9 @@ def character_completion(name,context,prompt):
         n=1,
         stop=None,
         temperature=0.5,
-    
     )
 
     message = response.choices[0].text.strip()
-
     return name,message
 
 
@@ -165,10 +174,9 @@ def character_creation(story,existing_characters):
         n=1,
         stop=None,
         temperature=0.5,
-    
     )
     message = response.choices[0].text.strip()
-    print(message)
+    
     name = openai.Completion.create(
         engine="text-davinci-003",
         prompt= f"what is the name of this described character:{message}if her character name is not mention make one that would fit the description. Your answer will be just the name nothing else." ,
@@ -176,10 +184,8 @@ def character_creation(story,existing_characters):
         n=1,
         stop=None,
         temperature=0.5,
-    
     )
     name_string = name.choices[0].text.strip()
-
     return name_string,message
 
 
@@ -193,13 +199,11 @@ def continue_story(story,characters):
         n=1,
         stop=None,
         temperature=0.5,
-    
     )
-    
-
-
     message = become.choices[0].text.strip()
     return message
+
+
 def Strigify_Characters(character_dict):
     string = ""
     for i in character_dict.keys():
@@ -208,9 +212,7 @@ def Strigify_Characters(character_dict):
 
 
 def dict_to_json(my_dict):
-   
     json_data = json.dumps(my_dict)
-
     return json_data
 
 
@@ -223,7 +225,6 @@ def get_image_descriptions(story,character):
         n=1,
         stop=None,
         temperature=0.5,
-    
     )
 
     keywords = openai.Completion.create(
@@ -233,8 +234,8 @@ def get_image_descriptions(story,character):
         n=1,
         stop=None,
         temperature=0.1,
-    
     )
+
     keywords_string = keywords.choices[0].text.strip()
     story_telling = openai.Completion.create(
         engine="text-davinci-003",
@@ -243,8 +244,8 @@ def get_image_descriptions(story,character):
         n=1,
         stop=None,
         temperature=0.5,
-    
     )
+
     naration = story_telling.choices[0].text.strip()
     print(naration)
     list = []
@@ -255,6 +256,7 @@ def get_image_descriptions(story,character):
     print(list)
     return list
 
+
 def make_character_image(character_dict):
     response = openai.Completion.create(
         engine="text-davinci-003",
@@ -263,12 +265,14 @@ def make_character_image(character_dict):
         n=1,
         stop=None,
         temperature=0.5,
-    
     )
     message = response.choices[0].text.strip()
     return message
 
-######################
+
+"""
+OPENAI CREATE FUNCTIONS
+"""
 
 def text_prompt(prompt: str) -> str:
     response = openai.Completion.create(
@@ -294,37 +298,10 @@ def image_prompt(prompt: str, size: int = 1024) -> str:
 
     return image_url
 
-######################
 
-def draw_caption(img="test.png", caption="Flash Gordon and his team of superhumans are travelling through the universe, fighting off hordes of aliens and robots."):
-    wrapper = textwrap.TextWrapper(width=43, max_lines=5)
-    word_list = wrapper.wrap(text=caption) 
-    caption_new = ''
-    for ii in word_list[:-1]:
-        caption_new = caption_new + ii + '\n'
-    caption_new += word_list[-1]
-
-    image = Image.open(io.BytesIO(base64.b64decode(img)))
-    draw = ImageDraw.Draw(image)
-
-    font = ImageFont.truetype(FONT_FILE, size=36)
-    w,h = draw.textsize(caption_new, font)
-    W,H = image.size
-    x,y = 0.5*(W-w),0.90*H-h
-    draw.rectangle((x-20, y, 1024-x+20, 1024-75), fill="black")
-    draw.text((x, y), caption_new, font=font)
-    
-    in_mem_file = io.BytesIO()
-    image.save(in_mem_file, format = "PNG")
-    # reset file pointer to start
-    in_mem_file.seek(0)
-    img_bytes = in_mem_file.read()
-
-    base64_encoded_result_bytes = base64.b64encode(img_bytes)
-    #base64_encoded_result_str = base64_encoded_result_bytes.decode('ascii')
-    return base64_encoded_result_bytes
-
+"""
+SERVER START
+"""
 
 if __name__ == '__main__':
-    # Start the Flask web server
     app.run(debug=True)
