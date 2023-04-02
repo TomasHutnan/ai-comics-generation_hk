@@ -11,6 +11,22 @@ openai.api_key_path="../openai_key.txt"
 
 app = Flask(__name__)
 
+####### TEST
+""" @app.route('/test', methods=['GET'])
+def test_picture():
+    response = requests.post("http://127.0.0.1:5000/api/character/picture", json={"character":{
+        "name": "Tom",
+        "attributes": ["A"],
+        "skin": "A",
+        "hair": ["A"],
+        "physical": ["A"],
+        "clothes": ["A"],
+    }})
+
+    return response.content """
+
+####### TEST
+
 @app.route('/api/story/generate', methods=['POST']) # mas formular - return vygenerovany story
 def generate_story():
     data = request.get_json()
@@ -60,9 +76,10 @@ def generate_panel():
 def generate_character_picture():
     data = request.get_json()
     
-    character = parse_character_form([data["character"]], "")
+    #character = parse_character_form([data["character"]], "")
 
-    image_url = make_character_image(character)
+    char_prompt = make_character_image(data["character"])
+    image_url = image_prompt(char_prompt)
     b64 = str(base64.b64encode(requests.get(image_url).content), encoding="utf-8")
 
     return b64
@@ -238,10 +255,10 @@ def get_image_descriptions(story,character):
     print(list)
     return list
 
-def make_character_image(character_dict,story):
+def make_character_image(character_dict):
     response = openai.Completion.create(
         engine="text-davinci-003",
-        prompt=f'You are Assistent of a blind painter and you need to describe him his paint subjects apearance in a very detailed manner. The paints subjects traits are:Skin tone:{character_dict["skin"]},hair:{character_dict["hair"].join()}, physical apearence:{character_dict["physical"]},clothes:{character_dict["clothes"]}.',
+        prompt=f'You are Assistent of a blind painter and you need to describe him his paint subjects apearance in a very detailed manner. The paints subjects traits are:Skin tone:{character_dict["skin"]},hair:{",".join(character_dict["hair"])}, physical apearence:{",".join(character_dict["physical"])},clothes:{",".join(character_dict["clothes"])}.',
         max_tokens=200,
         n=1,
         stop=None,
