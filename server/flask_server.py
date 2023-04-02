@@ -79,7 +79,7 @@ def generate_character_picture():
     #character = parse_character_form([data["character"]], "")
 
     char_prompt = make_character_image(data["character"])
-    image_url = image_prompt(char_prompt)
+    image_url = image_prompt(char_prompt, 256)
     b64 = str(base64.b64encode(requests.get(image_url).content), encoding="utf-8")
 
     return b64
