@@ -70,7 +70,7 @@ def generate_panel():
     b64 = str(base64.b64encode(requests.get(image_url).content), encoding="utf-8")
     captioned_b64 = draw_caption(b64, data["caption"][:200])
 
-    return captioned_b64
+    return str(captioned_b64)
 
 @app.route('/api/character/picture', methods=['POST']) # mas charactera - return b64 picture
 def generate_character_picture():
