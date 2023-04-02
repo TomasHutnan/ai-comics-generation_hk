@@ -1,6 +1,6 @@
 import openai
 import json
-openai.api_key = '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'
+openai.api_key_path="openai_key.txt"
 
 Characters = {}
 
