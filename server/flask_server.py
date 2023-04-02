@@ -203,7 +203,7 @@ def continue_story(story,characters):
 def Strigify_Characters(character_dict):
     string = ""
     for i in character_dict.keys():
-        string += "\n"+i +":"+"\n"+character_dict[i]
+        string += "\n"+i +":"+"\n"+"".join(character_dict[i])
     return string
 
 
